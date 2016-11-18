@@ -1,9 +1,10 @@
 import json
 from TwitterSearch import *
 
+#Config stores various credentials
 from config import TWITTER_ACCESS, TWITTER_SECRET, \
                    TWITTER_CON_SECRET, TWITTER_CON_ACCESS, \
-                   ES_INDEX, ES_TYPE
+                   AWS_ES_INDEX, AWS_ES_TYPE
 from settings import gmaps
 from settings import es
 from utils import get_category
@@ -11,6 +12,7 @@ from utils import get_category
 
 try:
     tso = TwitterSearchOrder()
+    #By default we collect the tweets of the Sports Category. This can be modified to any other category based on the application
     tso.set_keywords(['sports'])
     tso.set_language('en')
 
@@ -25,6 +27,7 @@ try:
     
     for tweet in ts.search_tweets_iterable(tso):
         try:
+            #The tweets are retrieved only if the geolocation is tagegd
             if tweet['user'].get('location') is not None:
                 location = tweet['user'].get('location')
                 tweet_id = str(tweet['id'])
@@ -39,7 +42,7 @@ try:
                     'time': tweet['created_at'],
                     'category': get_category(tweet_text)
                 }
-                es.index(index=ES_INDEX, doc_type=ES_TYPE, id=tweet_id, body=raw_tweet)
+                es.index(index=AWS_ES_INDEX, doc_type=AWS_ES_TYPE, id=tweet_id, body=raw_tweet)
         except Exception as e:
             print e
             continue
